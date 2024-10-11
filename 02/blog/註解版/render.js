@@ -72,6 +72,7 @@ export function layout(title, content) {
       <li>
         <h2>${ post.title }</h2> <!-- 顯示貼文標題 -->
         <p><a href="/post/${post.id}">Read post</a></p> <!-- 加入連結來閱讀該貼文 -->
+        <p><pre>time ${post.time}</pre><p> <!-- 加入時間 -->
       </li>
       `)
     }
@@ -104,6 +105,7 @@ export function layout(title, content) {
     return layout(post.title, `
       <h1>${post.title}</h1> <!-- 顯示貼文的標題 -->
       <pre>${post.body}</pre> <!-- 顯示貼文的內容 -->
+      <pre>time ${post.time}</pre> <!-- 顯示時間 -->
     `)
   }
   

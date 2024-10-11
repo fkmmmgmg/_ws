@@ -3,8 +3,8 @@ import * as render from './render.js' // 匯入本地的 render.js 模組，用�
 
 // 預設的貼文資料，包含兩篇貼文，每篇貼文有 id, title 和 body
 const posts = [
-  {id:0, title:'aaa', body:'aaaaa'},
-  {id:1, title:'bbb', body:'bbbbb'}
+  {id:0, title:'aaa', body:'aaaaa', time: new Date(Date.now()).toLocaleString()},
+  {id:1, title:'bbb', body:'bbbbb', time: new Date(Date.now()).toLocaleString()}
 ];
 
 const router = new Router(); // 建立 Router 物件，負責處理路由
@@ -48,9 +48,10 @@ async function create(ctx) {
     }
     console.log('post=', post) // 在伺服器控制台輸出貼文內容
     const id = posts.push(post) - 1; // 將新貼文加入 posts 陣列，並設定其 id
-    post.created_at = new Date(); // 設定貼文的建立時間
+    post.time = new Date().toLocaleString(); // 設定貼文的建立時間使用 toLocaleString() 格式化時間
     post.id = id; // 設定貼文的 id
     ctx.response.redirect('/'); // 新增貼文後重定向回首頁
+    console.log('post=',post);
   }
 }
 
