@@ -1,177 +1,138 @@
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const sqlite3 = require("sqlite3").verbose();
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
-const fetch = require("node-fetch"); // 如果還沒安裝 fetch，請安裝它：npm install node-fetch
-require("dotenv").config();
+import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+import { bcrypt } from "https://deno.land/x/bcryptjs/mod.ts";
+import { jwt } from "https://deno.land/x/djwt/mod.ts";
+import { Client } from "https://deno.land/x/sqlite/mod.ts";
+import * as dotenv from "https://deno.land/x/dotenv/mod.ts";
 
-const app = express();
-app.use(cors());
-app.use(bodyParser.json());
+dotenv.config();
+
+const app = new Application();
+const router = new Router();
 
 // 初始化資料庫
-const db = new sqlite3.Database("chat.db", (err) => {
-  if (err) {
-    console.error("資料庫無法開啟:", err.message);
+const db = new Client("./chat.db");
+
+// 建立資料表
+await db.query(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE,
+    password TEXT,
+    email TEXT
+  )
+`);
+
+await db.query(`
+  CREATE TABLE IF NOT EXISTS chats (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    userMessage TEXT,
+    aiReply TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id)
+  )
+`);
+
+// 註冊 API
+router.post("/api/register", async (context) => {
+  const { username, password } = await context.request.body().value;
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    db.query("INSERT INTO users (username, password) VALUES (?, ?)", [
+      username,
+      hashedPassword,
+    ]);
+    context.response.status = 201;
+    context.response.body = "註冊成功！";
+  } catch (error) {
+    context.response.status = 400;
+    context.response.body = "註冊失敗，請嘗試更換帳號！";
+  }
+});
+
+// 登入 API
+router.post("/api/login", async (context) => {
+  const { username, password } = await context.request.body().value;
+
+  const user = db.query("SELECT * FROM users WHERE username = ?", [username]);
+  if (!user || user.length === 0) {
+    context.response.status = 404;
+    context.response.body = "帳號不存在";
+    return;
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user[0].password);
+  if (isPasswordValid) {
+    const token = await jwt.sign({ userId: user[0].id }, "your_secret_key", {
+      expiresIn: "1h",
+    });
+    context.response.body = { token };
   } else {
-    console.log("資料庫已成功開啟");
-
-    // 建立用戶表格
-    db.run(
-      `
-      CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE,
-        password TEXT,
-        email TEXT
-      )
-      `,
-      (err) => {
-        if (err) {
-          console.error("建立 users 表格失敗:", err.message);
-        } else {
-          console.log("users 表格已準備就緒");
-        }
-      }
-    );
-
-    // 建立聊天記錄表格
-    db.run(
-      `
-      CREATE TABLE IF NOT EXISTS chats (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        userMessage TEXT,
-        aiReply TEXT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id)
-      )
-      `,
-      (err) => {
-        if (err) {
-          console.error("建立 chats 表格失敗:", err.message);
-        } else {
-          console.log("chats 表格已準備就緒");
-        }
-      }
-    );
+    context.response.status = 400;
+    context.response.body = "密碼錯誤";
   }
 });
 
 // 處理 Groq API 請求
-app.post("/api/chat", async (req, res) => {
-  const { userMessage } = req.body;
+router.post("/api/chat", async (context) => {
+  const { userMessage } = await context.request.body().value;
 
-  const apiKey = "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"; // Groq API Key 隱藏在後端
-  const groqApiUrl = "https://api.groq.com/openai/v1/chat/completions"; // 替換為實際的 Groq API URL
+  const apiKey = "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";
+  const groqApiUrl = "https://api.groq.com/openai/v1/chat/completions";
 
   try {
     const response = await fetch(groqApiUrl, {
-      body: JSON.stringify({ userMessage }),
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
+      body: JSON.stringify({ userMessage }),
     });
 
-    if (response.ok) {
+    if (1) {
       const data = await response.json();
-      res.json({ reply: data.reply }); // 傳送 AI 回應到前端
+      context.response.body = { reply: data.reply };
     } else {
-      res.status(500).send("無法從 Groq API 獲取回應");
+      context.response.status = 500;
+      context.response.body = "無法從 Groq API 獲取回應";
     }
   } catch (error) {
     console.error("發送 Groq API 請求時出錯:", error);
-    res.status(500).send("伺服器錯誤");
+    context.response.status = 500;
+    context.response.body = "伺服器錯誤";
   }
-});
-
-// 註冊 API
-app.post("/api/register", async (req, res) => {
-  const { username, password } = req.body;
-
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10); // 加密密碼
-    db.run(
-      "INSERT INTO users (username, password) VALUES (?, ?)",
-      [username, hashedPassword],
-      function (err) {
-        if (err) {
-          console.error("註冊錯誤:", err.message);
-          return res.status(400).send("註冊失敗，請嘗試更換帳號！");
-        }
-        res.status(201).send("註冊成功！");
-      }
-    );
-  } catch (error) {
-    console.error("註冊錯誤:", error);
-    res.status(500).send("註冊錯誤，請稍後再試！");
-  }
-});
-
-// 登入 API
-app.post("/api/login", (req, res) => {
-  const { username, password } = req.body;
-
-  db.get(
-    "SELECT * FROM users WHERE username = ?",
-    [username],
-    async (err, user) => {
-      if (err) {
-        console.error("登入錯誤:", err.message);
-        return res.status(500).send("伺服器錯誤");
-      }
-      if (!user) {
-        return res.status(404).send("帳號不存在");
-      }
-
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      if (isPasswordValid) {
-        const token = jwt.sign({ userId: user.id }, "your_secret_key", {
-          expiresIn: "1h",
-        });
-        res.json({ token });
-      } else {
-        res.status(400).send("密碼錯誤");
-      }
-    }
-  );
 });
 
 // 儲存聊天記錄 API
-app.post("/api/save-chat", (req, res) => {
-  const { userMessage, aiReply } = req.body;
-  const userId = req.userId;
+router.post("/api/save-chat", async (context) => {
+  const { userMessage, aiReply } = await context.request.body().value;
+  const userId = context.state.userId; // 假設這裡有驗證過的用戶 ID
 
-  db.run(
-    "INSERT INTO chats (user_id, userMessage, aiReply) VALUES (?, ?, ?)",
-    [userId, userMessage, aiReply],
-    function (err) {
-      if (err) {
-        console.error("儲存聊天記錄錯誤:", err.message);
-        return res.status(500).send("聊天記錄保存失敗");
-      }
-      res.status(201).json({ reply: aiReply });
-    }
-  );
+  db.query("INSERT INTO chats (user_id, userMessage, aiReply) VALUES (?, ?, ?)", [
+    userId,
+    userMessage,
+    aiReply,
+  ]);
+
+  context.response.status = 201;
+  context.response.body = { reply: aiReply };
 });
 
 // 取得聊天記錄 API
-app.get("/api/chats", (req, res) => {
-  const userId = req.userId;
+router.get("/api/chats", async (context) => {
+  const userId = context.state.userId;
 
-  db.all("SELECT * FROM chats WHERE user_id = ?", [userId], (err, chats) => {
-    if (err) {
-      console.error("讀取聊天記錄錯誤:", err.message);
-      return res.status(500).send("讀取聊天記錄錯誤");
-    }
-    res.json(chats);
-  });
+  const chats = db.query("SELECT * FROM chats WHERE user_id = ?", [userId]);
+  context.response.body = chats;
 });
 
+// 使用路由器
+app.use(router.routes());
+app.use(router.allowedMethods());
+
 // 啟動伺服器
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`伺服器正在運行在端口 ${PORT}`));
+const PORT = 5000;
+console.log(`伺服器正在運行在端口 ${PORT}`);
+await app.listen({ port: PORT });
