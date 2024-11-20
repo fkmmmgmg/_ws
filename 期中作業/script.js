@@ -25,6 +25,20 @@ async function handleLogin(event) {
       token = data.token;
       localStorage.setItem("token", token); // 保存 Token
       loadChatPage(); // 成功登入後載入聊天頁面
+    } else if (response.status === 404) {
+      // 若帳號不存在，自動進行註冊
+      const registerResponse = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (registerResponse.ok) {
+        alert("帳號未註冊，已自動完成註冊。請稍後登入！");
+        handleLogin(event); // 再次嘗試登入
+      } else {
+        alert("自動註冊失敗，請重試！");
+      }
     } else {
       alert("登入失敗，請檢查帳號或密碼！");
     }
