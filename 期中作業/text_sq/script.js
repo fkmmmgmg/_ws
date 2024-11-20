@@ -73,26 +73,31 @@ async function handleChat() {
   document.getElementById("user-input").value = "";
 
   try {
-    const response = await fetch("/api/save-chat", {
+    // 發送用戶訊息到後端的 /api/chat 端點
+    const response = await fetch("/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Authorization": `Bearer ${localStorage.getItem("token")}`, // 記得加上 Token
       },
-      body: JSON.stringify({ userMessage: userInput, aiReply: "AI response placeholder" }),
+      body: JSON.stringify({
+        userMessage: userInput, // 傳遞用戶的訊息
+      }),
     });
 
     if (response.ok) {
       const data = await response.json();
-      addMessage(data.reply, "ai");
-      loadChatHistory();
+      addMessage(data.reply, "ai"); // 顯示 AI 回應
+      loadChatHistory(); // 更新側邊欄的聊天歷史
     } else {
-      addMessage("Error: Unable to save chat.", "ai");
+      addMessage("Error: 無法獲得回應", "ai");
     }
   } catch (error) {
     console.error("Chat error:", error);
   }
 }
+
+
 
 async function loadChatHistory() {
   try {
