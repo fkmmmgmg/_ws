@@ -14,7 +14,7 @@ app.post("/api/chat", async (req, res) => {
   const { userMessage } = req.body;
   
   const apiKey = "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"; // Groq API Key 隱藏在後端
-  const groqApiUrl = "https://groq-api-url.com/v1/chat"; // 替換為實際的 Groq API URL
+  const groqApiUrl = "https://api.groq.com/openai/v1/chat/completions"; // 替換為實際的 Groq API URL
 
   try {
     const response = await fetch(groqApiUrl, {
