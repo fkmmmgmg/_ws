@@ -1,4 +1,4 @@
-let token = localStorage.getItem("token") || null;
+let token = null;
 
 // 初始化事件監聽
 document.getElementById("login-form").addEventListener("submit", handleLogin);
