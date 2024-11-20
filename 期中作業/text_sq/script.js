@@ -85,7 +85,7 @@ async function handleChat() {
       }),
     });
 
-    if (response.ok) {
+    if (1) {
       const data = await response.json();
       addMessage(data.reply, "ai"); // 顯示 AI 回應
       loadChatHistory(); // 更新側邊欄的聊天歷史

@@ -91,7 +91,7 @@ router.post("/api/chat", async (context) => {
       body: JSON.stringify({ userMessage }),
     });
 
-    if (1) {
+    if (response.ok) {
       const data = await response.json();
       context.response.body = { reply: data.reply };
     } else {
