@@ -1,9 +1,18 @@
-let token = null;
+let token = localStorage.getItem("token") || null;
 
 // 初始化事件監聽
 document.getElementById("login-form").addEventListener("submit", handleLogin);
 document.getElementById("register-form").addEventListener("submit", handleRegister);
 document.getElementById("send-btn").addEventListener("click", handleChat);
+
+// 頁面載入時根據登入狀態顯示對應頁面
+window.addEventListener("load", () => {
+  if (token) {
+    loadChatPage(); // 如果已登入，直接載入聊天頁面
+  } else {
+    loadLoginPage(); // 否則顯示登入頁面
+  }
+});
 
 async function handleLogin(event) {
   event.preventDefault();
@@ -21,7 +30,7 @@ async function handleLogin(event) {
       const data = await response.json();
       token = data.token;
       localStorage.setItem("token", token); // 保存 Token
-      loadChatPage();
+      loadChatPage(); // 登入成功，載入聊天頁面
     } else if (response.status === 404) {
       const registerResponse = await fetch("/api/register", {
         method: "POST",
@@ -72,70 +81,21 @@ async function handleChat() {
   addMessage(userInput, "user");
   document.getElementById("user-input").value = "";
 
-  /*try {
-    // 發送用戶訊息到後端的 /api/chat 端點
+  try {
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem("token")}`, // 記得加上 Token
+        "Authorization": `Bearer ${localStorage.getItem("token")}`,
       },
       body: JSON.stringify({
-        userMessage: userInput, // 傳遞用戶的訊息
+        userMessage: userInput,
       }),
-    });*/
-
-    try {
-      // 發送用戶訊息到後端的 /api/chat 端點
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json", // 設定傳送資料格式為 JSON
-          // "Authorization": `Bearer ${localStorage.getItem("token")}`, // 移除 Token 驗證
-        },
-        body: JSON.stringify({
-          userMessage: userInput, // 傳遞用戶的訊息
-        }),
-      });
-    
-      // 處理回應
-      const data = await response.json();
-      if (response.ok) {
-        console.log("回應:", data.reply); // 顯示 AI 回應
-      } else {
-        console.error("錯誤:", data); // 顯示錯誤訊息
-      }
-    } catch (error) {
-      console.error("發送請求時出錯:", error); // 捕獲發送請求時的錯誤
-    }
-
-    try {
-  // 發送用戶訊息到後端的 /api/chat 端點
-  const response = await fetch("/api/chat", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json", // 設定傳送資料格式為 JSON
-      // "Authorization": `Bearer ${localStorage.getItem("token")}`, // 移除 Token 驗證
-    },
-    body: JSON.stringify({
-      userMessage: userInput, // 傳遞用戶的訊息
-    }),
-  });
-
-  // 處理回應
-  const data = await response.json();
-  if (response.ok) {
-    console.log("回應:", data.reply); // 顯示 AI 回應
-  } else {
-    console.error("錯誤:", data); // 顯示錯誤訊息
-  }
-} catch (error) {
-  console.error("發送請求時出錯:", error); // 捕獲發送請求時的錯誤
-}
+    });
 
     if (response.ok) {
       const data = await response.json();
-      addMessage(data.reply, "ai"); // 顯示 AI 回應
+      addMessage(data.reply, "ai");
       loadChatHistory(); // 更新側邊欄的聊天歷史
     } else {
       addMessage("Error: 無法回應", "ai");
@@ -144,8 +104,6 @@ async function handleChat() {
     console.error("Chat error:", error);
   }
 }
-
-
 
 async function loadChatHistory() {
   try {
@@ -179,5 +137,18 @@ function updateSidebar(chats) {
     const chatItem = document.createElement("div");
     chatItem.className = "chat-item";
     chatItem.innerText = chat.userMessage;
-  })
-} 
+    sidebar.appendChild(chatItem); // 這裡要將 chatItem 加入到 sidebar 中
+  });
+}
+
+// 顯示聊天頁面
+function loadChatPage() {
+  document.getElementById("chat-page").style.display = "block";
+  document.getElementById("login-page").style.display = "none";
+}
+
+// 顯示登入頁面
+function loadLoginPage() {
+  document.getElementById("chat-page").style.display = "none";
+  document.getElementById("login-page").style.display = "block";
+}

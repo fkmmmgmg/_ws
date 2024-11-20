@@ -73,6 +73,7 @@ button:hover {
   display: flex;
   flex-direction: column;
   height: 70vh;
+  width: 100%;
 }
 
 #chat-container h2 {
@@ -94,6 +95,7 @@ button:hover {
   padding: 8px;
   margin: 5px 0;
   border-radius: 5px;
+  max-width: 80%;
 }
 
 .chat-message.user {
@@ -114,6 +116,8 @@ button:hover {
   border-radius: 5px;
   max-height: 200px;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-item {
@@ -122,6 +126,7 @@ button:hover {
   background-color: #f0f0f0;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 14px;
 }
 
 .chat-item:hover {
@@ -134,7 +139,7 @@ button:hover {
   margin-top: 10px;
   border-radius: 5px;
   border: 1px solid #ccc;
-  width: 80%;
+  width: calc(100% - 120px); /* Ensure the input field takes most of the space */
   margin-right: 10px;
 }
 
@@ -145,6 +150,8 @@ button:hover {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  width: 100px;
+  margin-left: 10px;
 }
 
 #send-btn:hover {
@@ -153,10 +160,25 @@ button:hover {
 
 /* Make layout responsive */
 @media (max-width: 768px) {
-  #chat-container {
-    width: 100%;
-  }
+  #chat-container,
   #auth-container {
     width: 100%;
+    margin: 10px;
+  }
+
+  #user-input {
+    width: calc(100% - 120px); /* Ensure the input field still takes most of the space on smaller screens */
+  }
+
+  #send-btn {
+    width: 100%; /* Make the send button full-width on mobile devices */
+    margin-left: 0;
+  }
+
+  /* Increase padding for mobile devices */
+  .chat-message {
+    padding: 12px;
+    font-size: 14px;
   }
 }
+
