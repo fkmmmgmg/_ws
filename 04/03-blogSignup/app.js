@@ -1,74 +1,77 @@
-import { Application, Router } from "https://deno.land/x/oak/mod.ts";
-import * as render from './render.js';
-import { DB } from "https://deno.land/x/sqlite/mod.ts";
-import { Session } from "https://deno.land/x/oak_sessions/mod.ts";
+import { Application, Router } from "https://deno.land/x/oak/mod.ts"; 
+import * as render from './render.js'; 
+import { DB } from "https://deno.land/x/sqlite/mod.ts"; 
+import { Session } from "https://deno.land/x/oak_sessions/mod.ts"; 
 
-const db = new DB("D:/My/WebsiteDesign-2/_ws/04/03-blogSignup/blog.db");
-db.query("CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, title TEXT, body TEXT)");
-db.query("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, email TEXT)");
+const db = new DB("D:/My/WebsiteDesign-2/_ws/04/03-blogSignup/blog.db"); 
+db.query("CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, title TEXT, body TEXT)"); 
+db.query("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, email TEXT)"); 
 
-const router = new Router();
+const router = new Router(); 
 
-router.get('/', list)
-  .get('/signup', signupUi)
-  .post('/signup', signup)
-  .get('/login', loginUi)
-  .post('/login', login)
-  .get('/logout', logout)
-  .get('/post/new', add)
-  .get('/post/:id', show)
-  .post('/post', create)
-  .get('/list/:user', listUserPosts)  // Shows only the posts of the specific user
+router.get('/', list) //顯示所有帖子
+  .get('/signup', signupUi) 
+  .post('/signup', signup) 
+  .get('/login', loginUi) 
+  .post('/login', login) 
+  .get('/logout', logout) 
+  .get('/post/new', add) 
+  .get('/post/:id', show) 
+  .post('/post', create) 
+  .get('/list/:user', listUserPosts)  
 
-const app = new Application();
-app.use(Session.initMiddleware());
-app.use(router.routes());
-app.use(router.allowedMethods());
+const app = new Application(); 
+app.use(Session.initMiddleware()); 
+app.use(router.routes()); 
+app.use(router.allowedMethods()); 
 
-function sqlcmd(sql, arg1) {
+function sqlcmd(sql, arg1) { 
   console.log('sql:', sql);
   try {
-    var results = db.query(sql, arg1);
-    console.log('sqlcmd: results=', results);
-    return results;
-  } catch (error) {
+    var results = db.query(sql, arg1); 
+    console.log('sqlcmd: results=', results); 
+    return results; 
+  } catch (error) { 
     console.log('sqlcmd error: ', error);
-    throw error;
+    throw error; 
   }
 }
 
-function postQuery(sql) {
-  let list = [];
-  for (const [id, username, title, body] of sqlcmd(sql)) {
-    list.push({id, username, title, body});
+
+function postQuery(sql) {  
+  let list = []; 
+  for (const [id, username, title, body] of sqlcmd(sql)) {  
+    list.push({id, username, title, body}); 
   }
-  console.log('postQuery: list=', list);
-  return list;
+  console.log('postQuery: list=', list); 
+  return list; 
 }
 
-function userQuery(sql) {
-  let list = [];
-  for (const [id, username, password, email] of sqlcmd(sql)) {
-    list.push({id, username, password, email});
+function userQuery(sql) { 
+  let list = []; 
+  for (const [id, username, password, email] of sqlcmd(sql)) { 
+    list.push({id, username, password, email}); 
   }
-  console.log('userQuery: list=', list);
-  return list;
+  console.log('userQuery: list=', list); 
+  return list; 
 }
 
 async function parseFormBody(body) {
   const pairs = await body.form();
-  const obj = {};
-  for (const [key, value] of pairs) {
-    obj[key] = value;
+  const obj = {}; 
+  for (const [key, value] of pairs) { 
+    obj[key] = value; 
+    
   }
-  return obj;
+  return obj; 
 }
+
 
 async function signupUi(ctx) {
-  ctx.response.body = await render.signupUi();
+  ctx.response.body = await render.signupUi(); 
 }
 
-async function signup(ctx) {
+async function signup(ctx) { 
   const body = ctx.request.body;
   if (body.type() === "form") {
     var user = await parseFormBody(body);
