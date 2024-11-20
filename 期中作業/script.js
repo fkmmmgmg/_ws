@@ -7,30 +7,33 @@ document.getElementById("send-btn").addEventListener("click", async () => {
     addMessage(userInput, "user");
     document.getElementById("user-input").value = "";
   
-    let key = "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"
+    
 
     // 呼叫 GroqChat API
-    try {
-      const response = await fetch("https://api.groqchat.com/v1/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${key}`,
-        },
-        body: JSON.stringify({ message: userInput }),
-      });
+    async function callGroqChatAPI() {
+      let key = "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"
+      try {
+        const response = await fetch("https://api.groqchat.com/v1/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${key}`,
+          },
+          body: JSON.stringify({ message: userInput }),
+        });
   
-      if (response.ok) {
-        const data = await response.json();
-        addMessage(data.reply, "ai");
-        saveChatRecord(userInput, data.reply); // 保存聊天記錄
-      } else {
-        addMessage("Error: Unable to get a response from AI.", "ai");
+        if (response.ok) {
+          const data = await response.json();
+          addMessage(data.reply, "ai");
+          saveChatRecord(userInput, data.reply); // 保存聊天記錄
+        } else {
+          addMessage("Error: Unable to get a response from AI.", "ai");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        addMessage("Error: Network issue occurred.", "ai");
       }
-    } catch (error) {
-      console.error("Error:", error);
-      addMessage("Error: Network issue occurred.", "ai");
-    }
+    }  
   });
   
   function addMessage(text, role) {
