@@ -18,14 +18,14 @@ app.post("/api/chat", async (req, res) => {
 
   try {
     const response = await fetch(groqApiUrl, {
-      method: "POST",
+      body: JSON.stringify({
+        userMessage: userMessage,
+      }),
+      method: 'POST',
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        userMessage: userMessage,
-      }),
     });
 
     if (response.ok) {
