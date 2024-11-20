@@ -90,7 +90,7 @@ async function handleChat() {
       addMessage(data.reply, "ai"); // 顯示 AI 回應
       loadChatHistory(); // 更新側邊欄的聊天歷史
     } else {
-      addMessage("Error: 無法獲得回應", "ai");
+      addMessage("Error: 無法回應", "ai");
     }
   } catch (error) {
     console.error("Chat error:", error);
