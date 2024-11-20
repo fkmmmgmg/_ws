@@ -72,18 +72,66 @@ async function handleChat() {
   addMessage(userInput, "user");
   document.getElementById("user-input").value = "";
 
-  try {
+  /*try {
     // 發送用戶訊息到後端的 /api/chat 端點
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`, // 記得加上 Token
+        "Authorization": `Bearer ${localStorage.getItem("token")}`, // 記得加上 Token
       },
       body: JSON.stringify({
         userMessage: userInput, // 傳遞用戶的訊息
       }),
-    });
+    });*/
+
+    try {
+      // 發送用戶訊息到後端的 /api/chat 端點
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json", // 設定傳送資料格式為 JSON
+          // "Authorization": `Bearer ${localStorage.getItem("token")}`, // 移除 Token 驗證
+        },
+        body: JSON.stringify({
+          userMessage: userInput, // 傳遞用戶的訊息
+        }),
+      });
+    
+      // 處理回應
+      const data = await response.json();
+      if (response.ok) {
+        console.log("回應:", data.reply); // 顯示 AI 回應
+      } else {
+        console.error("錯誤:", data); // 顯示錯誤訊息
+      }
+    } catch (error) {
+      console.error("發送請求時出錯:", error); // 捕獲發送請求時的錯誤
+    }
+
+    try {
+  // 發送用戶訊息到後端的 /api/chat 端點
+  const response = await fetch("/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json", // 設定傳送資料格式為 JSON
+      // "Authorization": `Bearer ${localStorage.getItem("token")}`, // 移除 Token 驗證
+    },
+    body: JSON.stringify({
+      userMessage: userInput, // 傳遞用戶的訊息
+    }),
+  });
+
+  // 處理回應
+  const data = await response.json();
+  if (response.ok) {
+    console.log("回應:", data.reply); // 顯示 AI 回應
+  } else {
+    console.error("錯誤:", data); // 顯示錯誤訊息
+  }
+} catch (error) {
+  console.error("發送請求時出錯:", error); // 捕獲發送請求時的錯誤
+}
 
     if (response.ok) {
       const data = await response.json();
