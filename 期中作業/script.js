@@ -7,13 +7,15 @@ document.getElementById("send-btn").addEventListener("click", async () => {
     addMessage(userInput, "user");
     document.getElementById("user-input").value = "";
   
+    let key = "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"
+
     // 呼叫 GroqChat API
     try {
-      const response = await fetch("https://api.groqchat.com/your-endpoint", {
+      const response = await fetch("https://api.groqchat.com/v1/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer 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",
+          Authorization: `Bearer ${key}`,
         },
         body: JSON.stringify({ message: userInput }),
       });
