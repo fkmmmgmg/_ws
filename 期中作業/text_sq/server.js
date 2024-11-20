@@ -1,30 +1,79 @@
 const express = require("express");
+const cors = require("cors");
 const bodyParser = require("body-parser");
 const sqlite3 = require("sqlite3").verbose();
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const fetch = require("node-fetch"); // 如果還沒安裝 fetch，請安裝它：npm install node-fetch
+require("dotenv").config();
 
 const app = express();
+app.use(cors());
 app.use(bodyParser.json());
 
-const fetch = require("node-fetch"); // 如果還沒安裝 fetch，請安裝它：npm install node-fetch
+// 初始化資料庫
+const db = new sqlite3.Database("chat.db", (err) => {
+  if (err) {
+    console.error("資料庫無法開啟:", err.message);
+  } else {
+    console.log("資料庫已成功開啟");
+
+    // 建立用戶表格
+    db.run(
+      `
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT,
+        email TEXT
+      )
+      `,
+      (err) => {
+        if (err) {
+          console.error("建立 users 表格失敗:", err.message);
+        } else {
+          console.log("users 表格已準備就緒");
+        }
+      }
+    );
+
+    // 建立聊天記錄表格
+    db.run(
+      `
+      CREATE TABLE IF NOT EXISTS chats (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        userMessage TEXT,
+        aiReply TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+      )
+      `,
+      (err) => {
+        if (err) {
+          console.error("建立 chats 表格失敗:", err.message);
+        } else {
+          console.log("chats 表格已準備就緒");
+        }
+      }
+    );
+  }
+});
 
 // 處理 Groq API 請求
 app.post("/api/chat", async (req, res) => {
   const { userMessage } = req.body;
-  
+
   const apiKey = "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"; // Groq API Key 隱藏在後端
   const groqApiUrl = "https://api.groq.com/openai/v1/chat/completions"; // 替換為實際的 Groq API URL
 
   try {
     const response = await fetch(groqApiUrl, {
-      body: JSON.stringify({
-        userMessage: userMessage,
-      }),
-      method: 'POST',
+      body: JSON.stringify({ userMessage }),
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
     });
 
@@ -40,40 +89,10 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-// 初始化資料庫
-const db = new sqlite3.Database("D:/My/WebsiteDesign-2/_ws/期中作業/chat.db", (err) => {
-  if (err) {
-    console.error('資料庫無法開啟', err.message);
-  } else {
-    console.log('資料庫已開啟');
-  }
-});
-
-// 創建表格 (用戶和聊天記錄)
-db.run(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE,
-    password TEXT,
-    email TEXT
-  )
-`);
-
-db.run(`
-  CREATE TABLE IF NOT EXISTS chats (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
-    userMessage TEXT,
-    aiReply TEXT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users (id)
-  )
-`);
-
 // 註冊 API
 app.post("/api/register", async (req, res) => {
   const { username, password } = req.body;
-  
+
   try {
     const hashedPassword = await bcrypt.hash(password, 10); // 加密密碼
     db.run(
@@ -111,7 +130,9 @@ app.post("/api/login", (req, res) => {
 
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (isPasswordValid) {
-        const token = jwt.sign({ userId: user.id }, "your_secret_key", { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user.id }, "your_secret_key", {
+          expiresIn: "1h",
+        });
         res.json({ token });
       } else {
         res.status(400).send("密碼錯誤");
