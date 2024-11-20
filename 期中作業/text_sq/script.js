@@ -78,14 +78,14 @@ async function handleChat() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem("token")}`, // 記得加上 Token
+        "Authorization": `Bearer ${apiKey}`, // 記得加上 Token
       },
       body: JSON.stringify({
         userMessage: userInput, // 傳遞用戶的訊息
       }),
     });
 
-    if (1) {
+    if (response.ok) {
       const data = await response.json();
       addMessage(data.reply, "ai"); // 顯示 AI 回應
       loadChatHistory(); // 更新側邊欄的聊天歷史
