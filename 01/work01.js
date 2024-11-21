@@ -4,7 +4,7 @@ const app = new Application();
 
 app.use((ctx) => {
   console.log('url=', ctx.request.url);
-  let pathname = ctx.request.url.pathname;
+  const pathname  = ctx.request.url.pathname;
 
   // 根據不同路徑顯示對應內容
   if (pathname === '/') {

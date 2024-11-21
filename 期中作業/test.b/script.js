@@ -6,7 +6,7 @@ document.getElementById("register-form").addEventListener("submit", handleRegist
 document.getElementById("send-btn").addEventListener("click", handleChat);
 
 // 頁面載入時根據登入狀態顯示對應頁面
-window.addEventListener("load", () => {
+globalThis.addEventListener("load", () => {
   if (token) {
     loadChatPage(); // 如果已登入，直接載入聊天頁面
   } else {

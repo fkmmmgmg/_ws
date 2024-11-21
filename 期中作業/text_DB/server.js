@@ -1,3 +1,4 @@
+import process from "node:process";
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");

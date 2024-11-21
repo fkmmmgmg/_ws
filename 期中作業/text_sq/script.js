@@ -24,7 +24,7 @@
         if (data.success) {
             alert("Login successful!");
             // 跳轉到主頁或執行其他操作
-            window.location.href = "/home";
+            globalThis.location.href = "/home";
         }
     } catch (error) {
         console.error("Error:", error);
