@@ -134,14 +134,14 @@ function updateSidebar(chats) {
 
 // 顯示聊天頁面
 function loadChatPage() {
-  document.getElementById("chat-container").style.display = "block";
-  document.getElementById("auth-container").style.display = "none";
+  document.getElementById("chat-page").style.display = "block";
+  document.getElementById("login-page").style.display = "none";
 }
 
 // 顯示登入頁面
 function loadLoginPage() {
-  document.getElementById("chat-container").style.display = "none";
-  document.getElementById("auth-container").style.display = "block";
+  document.getElementById("chat-page").style.display = "none";
+  document.getElementById("login-page").style.display = "block";
 }
 
 
