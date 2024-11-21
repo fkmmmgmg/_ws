@@ -139,7 +139,21 @@ function loadChatPage() {
 }
 
 // 顯示登入頁面
-function loadLoginPage() {
-  document.getElementById("chat-page").style.display = "none";
-  document.getElementById("login-page").style.display = "block";
+function showLoginForm() {
+  document.getElementById("register-container").style.display = "none";
+  document.getElementById("login-form").style.display = "block";
+  document.getElementById("auth-container").style.display = "block";
+  document.getElementById("chat-container").style.display = "none";
+}
+
+// 顯示註冊頁面
+function showRegisterForm() {
+  document.getElementById("login-form").style.display = "none";
+  document.getElementById("register-container").style.display = "block";
+}
+
+// 顯示聊天頁面
+function showChatPage() {
+  document.getElementById("chat-container").style.display = "block";
+  document.getElementById("auth-container").style.display = "none";
 }
