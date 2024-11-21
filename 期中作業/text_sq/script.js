@@ -8,9 +8,9 @@ document.getElementById("send-btn").addEventListener("click", handleChat);
 // 頁面載入時根據登入狀態顯示對應頁面
 window.addEventListener("load", () => {
   if (token) {
-    loadChatPage(); // 如果已登入，直接載入聊天頁面
+    showChatPage(); // 如果已登入，直接載入聊天頁面
   } else {
-    loadLoginPage(); // 否則顯示登入頁面
+    showLoginForm(); // 否則顯示登入頁面
   }
 });
 
@@ -132,11 +132,7 @@ function updateSidebar(chats) {
   });
 }
 
-// 顯示聊天頁面
-function loadChatPage() {
-  document.getElementById("chat-page").style.display = "block";
-  document.getElementById("login-page").style.display = "none";
-}
+
 
 // 顯示登入頁面
 function showLoginForm() {
