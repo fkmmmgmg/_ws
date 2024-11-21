@@ -10,10 +10,10 @@ const app = new Application();
 const router = new Router();
 
 // 初始化資料庫
-const db = new DB("D:/My/WebsiteDesign-2/_ws/期中作業/text_sq/chat.db");
+const db = new DB("D:/My/WebsiteDesign-2/_ws/期中作業/test.b/chat.db");
 
 // 建立資料表
-await db.query(`
+db.query(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE,
@@ -22,7 +22,7 @@ await db.query(`
   )
 `);
 
-await db.query(`
+db.query(`
   CREATE TABLE IF NOT EXISTS chats (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
