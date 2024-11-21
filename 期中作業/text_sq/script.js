@@ -8,9 +8,9 @@ document.getElementById("send-btn").addEventListener("click", handleChat);
 // 頁面載入時根據登入狀態顯示對應頁面
 window.addEventListener("load", () => {
   if (token) {
-    showChatPage(); // 如果已登入，直接載入聊天頁面
+    loadChatPage(); // 如果已登入，直接載入聊天頁面
   } else {
-    showLoginForm(); // 否則顯示登入頁面
+    loadLoginPage(); // 否則顯示登入頁面
   }
 });
 
@@ -132,24 +132,16 @@ function updateSidebar(chats) {
   });
 }
 
-
-
-// 顯示登入頁面
-function showLoginForm() {
-  document.getElementById("register-container").style.display = "none";
-  document.getElementById("login-form").style.display = "block";
-  document.getElementById("auth-container").style.display = "block";
-  document.getElementById("chat-container").style.display = "none";
-}
-
-// 顯示註冊頁面
-function showRegisterForm() {
-  document.getElementById("login-form").style.display = "none";
-  document.getElementById("register-container").style.display = "block";
-}
-
 // 顯示聊天頁面
-function showChatPage() {
+function loadChatPage() {
   document.getElementById("chat-container").style.display = "block";
   document.getElementById("auth-container").style.display = "none";
 }
+
+// 顯示登入頁面
+function loadLoginPage() {
+  document.getElementById("chat-container").style.display = "none";
+  document.getElementById("auth-container").style.display = "block";
+}
+
+
