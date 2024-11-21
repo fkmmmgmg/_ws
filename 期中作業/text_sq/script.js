@@ -1,4 +1,4 @@
-let token = null;
+let token = localStorage.getItem("token"); // 初始化從 localStorage 檢查 token
 
 // 初始化事件監聽
 document.getElementById("login-form").addEventListener("submit", handleLogin);
@@ -32,18 +32,8 @@ async function handleLogin(event) {
       localStorage.setItem("token", token); // 保存 Token
       loadChatPage(); // 登入成功，載入聊天頁面
     } else if (response.status === 404) {
-      const registerResponse = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (registerResponse.ok) {
-        alert("帳號未註冊，已自動完成註冊。請稍後登入！");
-        handleLogin(event); // 再次嘗試登入
-      } else {
-        alert("自動註冊失敗，請重試！");
-      }
+      alert("帳號未註冊，請先進行註冊！");
+      loadLoginPage();
     } else {
       alert("登入失敗，請檢查帳號或密碼！");
     }
@@ -66,6 +56,7 @@ async function handleRegister(event) {
 
     if (response.ok) {
       alert("註冊成功！請登入。");
+      loadLoginPage();
     } else {
       alert("註冊失敗，請嘗試更換帳號！");
     }
