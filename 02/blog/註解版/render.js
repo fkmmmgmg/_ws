@@ -70,13 +70,13 @@ export function layout(title, content) {
     for (let post of posts) {
       list.push(`
       <li>
-        <h2>${ post.title }</h2> <!-- 顯示貼文標題 -->
+        <h2>${post.title}</h2> <!-- 顯示貼文標題 -->
         <p><a href="/post/${post.id}">Read post</a></p> <!-- 加入連結來閱讀該貼文 -->
         <p><pre>time ${post.time}</pre><p> <!-- 加入時間 -->
       </li>
       `)
     }
-    let content = `
+    const content = `
     <h1>Posts</h1> <!-- 顯示貼文標題 -->
     <p>You have <strong>${posts.length}</strong> posts!</p> <!-- 顯示貼文數量 -->
     <p><a href="/post/new">Create a Post</a></p> <!-- 新增貼文的連結 -->
