@@ -5,13 +5,15 @@ import { DB } from "https://deno.land/x/sqlite/mod.ts";
 import * as dotenv from "https://deno.land/x/dotenv/mod.ts";
 import { oakCors } from "https://deno.land/x/cors/mod.ts";
 
+// 先初始化 app
+const app = new Application();
+const router = new Router();
+
 // 启用 CORS
 app.use(oakCors());
 
+// 加載環境變數
 dotenv.config();
-
-const app = new Application();
-const router = new Router();
 
 // 初始化資料庫
 const db = new DB("D:/My/WebsiteDesign-2/_ws/期中作業/test.b/chat.db");
@@ -163,5 +165,3 @@ app.use(router.allowedMethods());
 const PORT = 5000;
 console.log(`伺服器正在運行在端口 ${PORT}`);
 await app.listen({ port: PORT });
-
-
