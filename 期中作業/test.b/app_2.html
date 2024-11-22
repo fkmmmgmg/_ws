@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 聊天系統</title>
+  <style>
+    /* Reset some default styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    /* Body Style */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    
+    /* Container for the auth and chat page */
+    #auth-container,
+    #chat-container {
+      width: 100%;
+      max-width: 600px;
+      margin: auto;
+      display: none;
+    }
+    
+    /* Auth container (login/register form styles) */
+    #auth-container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    #auth-container h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    input[type="text"],
+    input[type="password"] {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    
+    button {
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    button:hover {
+      background-color: #45a049;
+    }
+    
+    /* Chat container styles */
+    #chat-container {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      height: 70vh;
+    }
+    
+    #chat-container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    #chat-box {
+      flex-grow: 1;
+      overflow-y: auto;
+      height: 60%;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+      background-color: #fafafa;
+    }
+    
+    .chat-message {
+      padding: 8px;
+      margin: 5px 0;
+      border-radius: 5px;
+    }
+    
+    .chat-message.user {
+      background-color: #d1e7fd;
+      align-self: flex-end;
+    }
+    
+    .chat-message.ai {
+      background-color: #f1f1f1;
+      align-self: flex-start;
+    }
+    
+    /* Sidebar for chat history */
+    #chat-sidebar {
+      margin-top: 20px;
+      background-color: #f7f7f7;
+      padding: 10px;
+      border-radius: 5px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .chat-item {
+      padding: 5px;
+      margin: 5px 0;
+      background-color: #f0f0f0;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .chat-item:hover {
+      background-color: #e0e0e0;
+    }
+    
+    /* Message input styles */
+    #user-input {
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      width: 80%;
+      margin-right: 10px;
+    }
+    
+    #send-btn {
+      padding: 10px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    #send-btn:hover {
+      background-color: #45a049;
+    }
+    
+    /* Make layout responsive */
+    @media (max-width: 768px) {
+      #chat-container {
+        width: 100%;
+      }
+      #auth-container {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 登入與註冊頁面 -->
+  <div id="auth-container">
+    <h1>登入或註冊</h1>
+
+    <!-- 登入表單 -->
+    <form id="login-form">
+      <label for="login-username">使用者名稱:</label>
+      <input type="text" id="login-username" required>
+
+      <label for="login-password">密碼:</label>
+      <input type="password" id="login-password" required>
+
+      <button type="submit">登入</button>
+    </form>
+
+    <p>還沒有帳號嗎？<a href="javascript:void(0);" onclick="showRegisterForm()">註冊</a></p>
+  </div>
+
+  <!-- 註冊表單 -->
+  <div id="register-container" style="display: none;">
+    <h1>註冊新帳號</h1>
+
+    <form id="register-form">
+      <label for="register-username">使用者名稱:</label>
+      <input type="text" id="register-username" required>
+
+      <label for="register-password">密碼:</label>
+      <input type="password" id="register-password" required>
+
+      <button type="submit">註冊</button>
+    </form>
+
+    <p>已經有帳號了？<a href="javascript:void(0);" onclick="showLoginForm()">回到登入頁面</a></p>
+  </div>
+
+  <!-- 聊天頁面 -->
+  <div id="chat-container">
+    <h2>歡迎來到 AI 聊天系統</h2>
+
+    <div id="chat-box"></div>
+
+    <div>
+      <input type="text" id="user-input" placeholder="輸入訊息..." />
+      <button id="send-btn">發送訊息</button>
+    </div>
+
+    <div id="chat-sidebar">
+      <h3>聊天歷史</h3>
+      <!-- 聊天歷史會顯示在這裡 -->
+    </div>
+  </div>
+
+  <script>
+    let token = localStorage.getItem("token"); // 初始化從 localStorage 檢查 token
+
+    // 初始化事件監聽
+    document.getElementById("login-form").addEventListener("submit", handleLogin);
+    document.getElementById("register-form").addEventListener("submit", handleRegister);
+    document.getElementById("send-btn").addEventListener("click", handleChat);
+
+    // 頁面載入時根據登入狀態顯示對應頁面
+    window.addEventListener("load", () => {
+      if (token) {
+        loadChatPage(); // 如果已登入，直接載入聊天頁面
+      } else {
+        loadLoginPage(); // 否則顯示登入頁面
+      }
+    });
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      const username = document.getElementById("login-username").value;
+      const password = document.getElementById("login-password").value;
+
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          token = data.token;
+          localStorage.setItem("token", token); // 保存 Token
+          loadChatPage(); // 登入成功，載入聊天頁面
+        } else if (response.status === 404) {
+          alert("帳號未註冊，請先進行註冊！");
+          loadLoginPage();
+        } else {
+          alert("登入失敗，請檢查帳號或密碼！");
+        }
+      } catch (error) {
+        console.error("Login error:", error);
+      }
+    }
+
+    async function handleRegister(event) {
+      event.preventDefault();
+      const username = document.getElementById("register-username").value;
+      const password = document.getElementById("register-password").value;
+
+      try {
+        const response = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (response.ok) {
+          alert("註冊成功！請登入。");
+          loadLoginPage();
+        } else {
+          alert("註冊失敗，請嘗試更換帳號！");
+        }
+      } catch (error) {
+        console.error("Register error:", error);
+      }
+    }
+
+    async function handleChat() {
+      const userInput = document.getElementById("user-input").value;
+      if (!userInput) return;
+
+      // 顯示使用者訊息
+      displayMessage(userInput, "user");
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify({ message: userInput }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          displayMessage(data.reply, "ai");
+        } else {
+          alert("訊息處理失敗");
+        }
+      } catch (error) {
+        console.error("Chat error:", error);
+      }
+
+      // 清空輸入框
+      document.getElementById("user-input").value = "";
+    }
+
+    function displayMessage(message, sender) {
+      const chatBox = document.getElementById("chat-box");
+      const messageElement = document.createElement("div");
+      messageElement.classList.add("chat-message", sender);
+      messageElement.textContent = message;
+      chatBox.appendChild(messageElement);
+      chatBox.scrollTop = chatBox.scrollHeight; // 滾動到最底部
+    }
+
+    // 顯示登入頁面
+    function loadLoginPage() {
+      document.getElementById("auth-container").style.display = "block";
+      document.getElementById("chat-container").style.display = "none";
+    }
+
+    // 顯示聊天頁面
+    function loadChatPage() {
+      document.getElementById("auth-container").style.display = "none";
+      document.getElementById("chat-container").style.display = "block";
+    }
+
+    // 顯示註冊頁面
+    function showRegisterForm() {
+      document.getElementById("auth-container").style.display = "none";
+      document.getElementById("register-container").style.display = "block";
+    }
+
+    // 顯示登入頁面
+    function showLoginForm() {
+      document.getElementById("register-container").style.display = "none";
+      document.getElementById("auth-container").style.display = "block";
+    }
+  </script>
+
+</body>
+</html>

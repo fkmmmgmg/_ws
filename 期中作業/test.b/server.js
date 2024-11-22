@@ -3,6 +3,10 @@ import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
 import { create, verify, getNumericDate } from "https://deno.land/x/djwt/mod.ts";
 import { DB } from "https://deno.land/x/sqlite/mod.ts";
 import * as dotenv from "https://deno.land/x/dotenv/mod.ts";
+import { oakCors } from "https://deno.land/x/cors/mod.ts";
+
+// 启用 CORS
+app.use(oakCors());
 
 dotenv.config();
 
@@ -159,3 +163,5 @@ app.use(router.allowedMethods());
 const PORT = 5000;
 console.log(`伺服器正在運行在端口 ${PORT}`);
 await app.listen({ port: PORT });
+
+
