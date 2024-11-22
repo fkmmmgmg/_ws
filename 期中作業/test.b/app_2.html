@@ -274,7 +274,7 @@
       const password = document.getElementById("register-password").value;
 
       try {
-        const response = await fetch("http://localhost:5000/api/register", {
+        const response = await fetch("/api/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, password }),
@@ -284,7 +284,7 @@
           alert("註冊成功！請登入。");
           loadLoginPage();
         } else {
-          alert("註冊失敗，請嘗試更換帳號！");
+          alert("註冊失敗，請嘗試更換！");
         }
       } catch (error) {
         console.error("Register error:", error);
