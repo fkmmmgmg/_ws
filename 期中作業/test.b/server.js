@@ -40,7 +40,7 @@ db.query(`
 `);
 
 // JWT secret key
-const JWT_SECRET = Deno.env.get("JWT_SECRET") || "your_secret_key";
+const JWT_SECRET = Deno.env.get("JWT_SECRET") || "12345";
 
 // 註冊 API
 router.post("/api/register", async (context) => {
