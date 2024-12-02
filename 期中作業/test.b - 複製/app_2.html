@@ -167,6 +167,7 @@
   </div>
 
   <script>
+    const domain = "http://localhost:8000";
     let token = localStorage.getItem("token");
 
     // 初始頁面加載
@@ -209,7 +210,7 @@ document.getElementById("login-form").onsubmit = async (e) => {
   successContainer.textContent = "";
 
   try {
-    const res = await fetch("/api/login", {
+    const res = await fetch(`${domain}/api/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -244,7 +245,7 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
   const password = document.getElementById("login-password").value.trim();
 
   try {
-    const response = await fetch("/api/login", {
+    const response = await fetch(`${domain}/api/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -283,7 +284,7 @@ document.getElementById("register-form").addEventListener("submit", async (event
   const password = document.getElementById("register-password").value.trim();
 
   try {
-    const response = await fetch("/api/register", {
+    const response = await fetch(`${domain}/api/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -324,7 +325,7 @@ function showChatPage() {
       appendMessage(message, "user");
       input.value = "";
       try {
-        const res = await fetch("/api/chat", {
+        const res = await fetch(`${domain}/api/chat`, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
