@@ -1,26 +1,3 @@
-function startGame() {
-    snakePosition();
-    let lose = isOver();
-    if(lose){
-        document.body.addEventListener('keydown', playAgain);
-        return;
-    }
-    clearScreen();
-
-    checkColli();
-    let win = isWin();
-    if(win){
-        return;
-    }
-    drawApple();
-    drawSnake();
-    drawScore();
-    
-    setSpeed();
-    
-    setTimeout(startGame, 1000/speed);
-}
-
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
@@ -48,9 +25,46 @@ let yV = 0;
 
 let score = 0;
 
-function snakePosition() {
-    headX = headX + xV;
-    headY = headY + yV;
+function startGame() {
+    snakePosition();
+    let lose = isOver();
+    if(lose){
+        document.body.addEventListener('keydown', playAgain);
+        return;
+    }
+    clearScreen();
+
+    checkColli();
+    let win = isWin();
+    if(win){
+        return;
+    }
+    drawApple();
+    drawSnake();
+    drawScore();
+    
+    setSpeed();
+    
+    setTimeout(startGame, 1000/speed);
+}
+
+function setSpeed() {
+        if(score == 5){
+            speed = 10;
+        }    
+}
+
+function isWin() {
+    let win = false;
+    if(score == 25){
+        win = true;
+    }
+    if(win){
+        ctx.fillStyle = "white";
+        ctx.font = "50px Poppins";
+        ctx.fillText("你贏了!", canvas.width/3.3, canvas.height /2)
+    }
+    return win;
 }
 
 function isOver() {
@@ -74,54 +88,10 @@ function isOver() {
     }
     return Over;
 }
-//如果蛇頭跑到了地圖的邊界，或是撞上自己的身體，則回傳Over = true，遊戲結束。
 
-//playAgain：
-function playAgain(event) {
-    if(event.keyCode == 32){
-        location.reload();
-    }
-}
-//如果按下空白鍵則重新載入這個頁面，讓遊戲再跑一次。
-
-//clearScreen：
 function clearScreen() {
     ctx.fillStyle= 'black';
     ctx.fillRect(0, 0, 400, 400);
-}
-//把背景設為黑色。
-
-//checkColli：
-function checkColli() {
-    if(appleX === headX && appleY === headY){
-        appleX = Math.floor(Math.random() * tileCount);
-        appleY = Math.floor(Math.random() * tileCount);
-        tailLen ++;
-        score ++;
-        if(score > 5 && score % 2 == 0){
-            speed ++;
-        }
-    }
-}
-//如果蛇和蘋果碰撞，則分數和長度皆加一，再如果分數大於5，每到達偶數分速度就加一。
-
-//isWin：
-function isWin() {
-    let win = false;
-    if(score == 25){
-        win = true;
-    }
-    if(win){
-        ctx.fillStyle = "white";
-        ctx.font = "50px Poppins";
-        ctx.fillText("你贏了!", canvas.width/3.3, canvas.height /2)
-    }
-    return win;
-}
-
-function drawApple() {
-    ctx.fillStyle = "red";
-    ctx.fillRect(appleX * tileCount, appleY * tileCount, tileSize, tileSize);
 }
 
 function drawSnake() {
@@ -139,6 +109,12 @@ function drawSnake() {
 
     ctx.fillStyle = 'orange';
     ctx.fillRect(headX * tileCount, headY *tileCount, tileSize, tileSize);
+
+}
+
+function drawApple() {
+    ctx.fillStyle = "red";
+    ctx.fillRect(appleX * tileCount, appleY * tileCount, tileSize, tileSize);
 }
 
 function drawScore() {
@@ -147,10 +123,21 @@ function drawScore() {
     ctx.fillText("Score: " + score, canvas.width-50, 10);
 }
 
-function setSpeed() {
-    if(score == 5){
-        speed = 10;
-    }    
+function checkColli() {
+    if(appleX === headX && appleY === headY){
+        appleX = Math.floor(Math.random() * tileCount);
+        appleY = Math.floor(Math.random() * tileCount);
+        tailLen ++;
+        score ++;
+        if(score > 5 && score % 2 == 0){
+            speed ++;
+        }
+    }
+}
+
+function snakePosition() {
+    headX = headX + xV;
+    headY = headY + yV;
 }
 
 document.body.addEventListener('keydown', keyDown);
