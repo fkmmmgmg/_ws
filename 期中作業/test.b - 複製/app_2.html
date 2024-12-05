@@ -98,6 +98,14 @@
       margin-right: 10px;
     }
 
+    #user-output{
+      width: calc(100% - 100px);
+      padding: 10px;
+      border: 1px solid #9e9e9e;
+      border-radius: 5px;
+      margin-right: 10px;
+    }
+
     #send-btn {
       width: 80px;
     }
@@ -125,6 +133,7 @@
       #auth-container, #register-container, #chat-container {
         width: 100%;
         margin: 0;
+        
       }
     }
   </style>
@@ -156,7 +165,7 @@
     <p class="link">已有帳號？<a href="javascript:void(0);" onclick="toggleForms()">登入</a></p>
   </div>
 
-  <!-- 聊天頁面 -->
+ <!-- 聊天頁面 -->
   <div id="chat-container">
     <h2>AI 聊天系統</h2>
     <div id="chat-box"></div>
@@ -172,9 +181,23 @@
 
     // 初始頁面加載
     window.onload = () => {
-      if (token) showChatPage();
-      else showAuthPage();
+
+      showAuthPage();
     };
+
+    async function verifyToken() {
+      try {
+        const res = await fetch(`${domain}/api/verify`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Token 驗證失敗");
+        showChatPage();
+      } catch (err) {
+        console.error(err.message);
+        localStorage.removeItem("token");
+        showAuthPage();
+      }
+    }
 
     // 表單切換
     function toggleForms() {
@@ -191,14 +214,21 @@
       document.getElementById("chat-container").style.display = "none";
     }
 
-    // 顯示聊天頁面
+   // 顯示聊天頁面
     function showChatPage() {
       document.getElementById("auth-container").style.display = "none";
       document.getElementById("register-container").style.display = "none";
       document.getElementById("chat-container").style.display = "block";
     }
-document.getElementById("login-form").onsubmit = async (e) => {
-  e.preventDefault();
+
+    function logout() {
+      localStorage.removeItem("token");
+      showAuthPage();
+    }
+
+
+document.getElementById("login-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
 
   const username = document.getElementById("login-username").value.trim();
   const password = document.getElementById("login-password").value.trim();
@@ -233,11 +263,12 @@ document.getElementById("login-form").onsubmit = async (e) => {
 
     // 跳轉到聊天頁面或執行其他動作
     showChatPage();
+
   } catch (err) {
     console.error("登入錯誤:", err);
     errorContainer.textContent = err.message || "登入失敗！";
   }
-};
+});
 
 document.getElementById("login-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -265,12 +296,13 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
     alert(`歡迎回來, ${username}!`);
 
     // 儲存 Token (如果有回傳)
-    if (data.token) {
+    if (result.token) {
       localStorage.setItem("token", result.token);
     }
 
     // 跳轉到聊天頁面或執行其他動作
     showChatPage();
+
   } catch (err) {
     console.error("登入錯誤:", err);
     alert(err.message || "登入失敗，請檢查帳號或密碼！");
@@ -312,43 +344,43 @@ document.getElementById("register-form").addEventListener("submit", async (event
 });
 
 // 範例跳轉到聊天頁面函數
-function showChatPage() {
-  alert("跳轉到聊天頁面！");
-  // 可在此實作實際的跳轉邏輯，例如使用 `window.location.href`
+document.getElementById("send-btn").onclick = async () => {
+  const input = document.getElementById("user-input");
+  const message = input.value.trim();
+  if (!message) return;
+
+
+  appendMessage(message, "user"); // 顯示使用者訊息
+  input.value = ""; // 清空輸入框
+
+  
+
+  try {
+    const res = await fetch(`${domain}/api/chat`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json"},
+      body: JSON.stringify({ message })
+    });
+
+    const data = await res.json();
+
+    // 顯示 AI 回覆訊息
+    appendMessage(data.reply, "ai");
+  } catch (err) {
+    appendMessage("發送失敗，請稍後再試！", "ai");
+  }
+};
+
+// 添加訊息到聊天框的函數
+function appendMessage(text, sender) {
+  const chatBox = document.getElementById("chat-box");
+  const msg = document.createElement("div");
+  msg.className = `chat-message ${sender}`; // 設置訊息的樣式，區分使用者和 AI
+  msg.textContent = text;
+  chatBox.appendChild(msg);
+  chatBox.scrollTop = chatBox.scrollHeight; // 滾動到最新訊息
 }
-
-    // 發送聊天訊息
-    document.getElementById("send-btn").onclick = async () => {
-      const input = document.getElementById("user-input");
-      const message = input.value.trim();
-      if (!message) return;
-      appendMessage(message, "user");
-      input.value = "";
-      try {
-        const res = await fetch(`${domain}/api/chat`, {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({ message })
-        });
-        const data = await res.json();
-        appendMessage(data.reply, "ai");
-      } catch (err) {
-        appendMessage("發送失敗，請稍後再試！", "ai");
-      }
-    };
-
-    // 添加訊息到聊天框
-    function appendMessage(text, sender) {
-      const chatBox = document.getElementById("chat-box");
-      const msg = document.createElement("div");
-      msg.className = `chat-message ${sender}`;
-      msg.textContent = text;
-      chatBox.appendChild(msg);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
   </script>
 </body>
 </html>

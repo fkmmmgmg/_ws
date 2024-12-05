@@ -11,8 +11,18 @@ const router = new Router();
 const env = config();
 const JWT_SECRET = env.JWT_SECRET || "default_secret";
 
+const groqApiUrl = "https://api.groq.com/openai/v1/chat/completions";
+const apiKey = "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"; // 替換為你的 Groq API 金鑰
+
 // 啟用 CORS
 app.use(oakCors({ origin: "*" }));
+
+// 靜態文件處理
+router.get("/:path*", async (ctx) => {
+  await send(ctx, ctx.params.path || "app_2.html", {
+    root: "./", // 確保靜態文件放在同目錄下
+  });
+});
 
 // 初始化資料庫
 const db = new DB("chat.db");
@@ -73,12 +83,19 @@ router.post("/api/register", async (ctx) => {
 // 登入 API
 router.post("/api/login", async (ctx) => {
   const body = ctx.request.body();
-  if (body.type === "json") {
-    try {
+  const DB_ENUMS =  {
+      number: 0,
+      account: 1,
+      password: 2,
+      email: 3,
+  };
+  if (body.type === 'json'){
+    try{
       const post = await body.value;
       const { username, password } = post;
 
       const users = await db.query("SELECT * FROM users WHERE username = ?", [username]);
+      ctx.response.body = {message: users};
       if (users.length === 0) {
         ctx.response.status = 401;
         ctx.response.body = { message: "登入失敗，帳號或密碼錯誤" }; // 明確定義返回的訊息
@@ -86,7 +103,7 @@ router.post("/api/login", async (ctx) => {
       }
 
       const user = users[0];
-      const passwordMatch = await bcrypt.compare(password, user.password);
+      const passwordMatch = await bcrypt.compare(password, user[DB_ENUMS.password]);
       if (!passwordMatch) {
         ctx.response.status = 401;
         ctx.response.body = { message: "登入失敗，帳號或密碼錯誤" }; // 明確定義返回的訊息
@@ -94,7 +111,7 @@ router.post("/api/login", async (ctx) => {
       }
 
       ctx.response.status = 200;
-      ctx.response.body = { message: "登入成功！" }; // 明確定義返回的訊息
+      ctx.response.body = { message: "登入成功！",token: JWT_SECRET }; // 明確定義返回的訊息
     } catch (error) {
       console.error("登入失敗:", error);
       ctx.response.status = 400;
@@ -130,17 +147,22 @@ app.use(async (ctx, next) => {
 // 聊天 API
 router.post("/api/chat", async (ctx) => {
   try {
+    // 從請求中獲取使用者訊息
     const { userMessage } = await ctx.request.body({ type: "json" }).value;
-    const userId = ctx.state.userId; // 從 state 中獲取 userId
+    
+    // 從 state 中獲取 userId
+    const userId = ctx.state.userId;
+
+    // 如果沒有 userId，則回傳 401 狀態碼
     if (!userId) {
       ctx.response.status = 401;
       ctx.response.body = { message: "未經授權" };
       return;
     }
 
-    const apiKey = "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"; // 替換為實際的 API 金鑰
-    const groqApiUrl = "https://api.groq.com/openai/v1/chat/completions";
+   
 
+    // 呼叫 Groq API，發送使用者訊息
     const response = await fetch(groqApiUrl, {
       method: "POST",
       headers: {
@@ -153,33 +175,31 @@ router.post("/api/chat", async (ctx) => {
       }),
     });
 
+    // 檢查 Groq API 回應是否正常
     if (response.ok) {
       const data = await response.json();
       const aiReply = data.choices[0].message.content;
-      db.query(
+
+      // 儲存使用者訊息和 AI 回應到資料庫
+      await db.query(
         "INSERT INTO chats (user_id, userMessage, aiReply) VALUES (?, ?, ?)",
         [userId, userMessage, aiReply]
       );
+
+      // 回傳 AI 回應給使用者
       ctx.response.body = { reply: aiReply };
     } else {
+      // 如果 Groq API 回應錯誤，回傳 500 錯誤
       const errorData = await response.json();
       ctx.response.status = 500;
       ctx.response.body = { message: "呼叫 Groq API 出錯", error: errorData };
     }
   } catch (error) {
+    // 捕獲錯誤並回傳 500 錯誤
     console.error("聊天請求錯誤:", error);
     ctx.response.status = 500;
     ctx.response.body = { message: "伺服器錯誤" };
   }
-});
-
-// 靜態文件處理
-router.get("/:path*", async (ctx) => {
-  const filePath = ctx.params.path || "";
-  await send(ctx, filePath, {
-    root: "D:/My/WebsiteDesign-2/_ws/期中作業/test.b",
-    index: "app_2.html",
-  });
 });
 
 // 忽略 favicon 請求
