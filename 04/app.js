@@ -1,9 +1,9 @@
 import { Application, Router } from "https://deno.land/x/oak/mod.ts"; 
-import * as render from './render.js'; 
+import * as render from '../04/render.js'; 
 import { DB } from "https://deno.land/x/sqlite/mod.ts"; 
 import { Session } from "https://deno.land/x/oak_sessions/mod.ts"; 
 
-const db = new DB("D:/My/WebsiteDesign-2/_ws/04/03-blogSignup/blog.db"); 
+const db = new DB("D:/My/WebsiteDesign-2/_ws/04/blog.db"); 
 db.query("CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, title TEXT, body TEXT)"); 
 db.query("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, email TEXT)"); 
 

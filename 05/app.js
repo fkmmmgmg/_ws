@@ -1,11 +1,11 @@
 //引入所需的模組
 import { Application, Router } from "https://deno.land/x/oak/mod.ts"; //是 Oak 框架的核心部分，用於處理 HTTP 請求和路由。
-import * as render from './render.js'; //渲染頁面（應該包含視圖層的內容，如註冊頁面或登入頁面等）
+import * as render from '../05/render.js'; //渲染頁面（應該包含視圖層的內容，如註冊頁面或登入頁面等）
 import { DB } from "https://deno.land/x/sqlite/mod.ts"; //用於和 SQLite 資料庫進行互動
 import { Session } from "https://deno.land/x/oak_sessions/mod.ts"; //用於和 SQLite 資料庫進行互動
 
 //建立資料庫及資料表
-const db = new DB("D:/My/WebsiteDesign-2/_ws/04/03-blogSignup/blog.db"); //採用指定路徑建立一個資料庫檔案 blog.db
+const db = new DB("D:/My/WebsiteDesign-2/_ws/05/blog.db"); //採用指定路徑建立一個資料庫檔案 blog.db
 db.query("CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, title TEXT, body TEXT)"); //表存儲帖子的 id, username, title, 和 body
 db.query("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, email TEXT)"); //表存儲用戶的 id, username, password, 和 email
 
