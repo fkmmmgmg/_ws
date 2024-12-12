@@ -8,4 +8,6 @@ post= { title: "ccc", body: "ccccc" }
 post= { title: "ddd", body: "ddddd" }
 post= { title: "eee", body: "eeeee" }
 ...
-```
+
+參考老師的專案理解後再做修改，新增sql儲存功能。
+...

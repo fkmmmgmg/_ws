@@ -5,6 +5,9 @@ import { config } from "https://deno.land/x/dotenv/mod.ts";
 import { oakCors } from "https://deno.land/x/cors/mod.ts";
 import { Application, Router, send } from "https://deno.land/x/oak@v10.0.0/mod.ts";
 
+import { askQuestion } from "./groqApi.js";
+
+
 // 初始化應用程式和環境變數
 const app = new Application();
 const router = new Router();
@@ -12,7 +15,10 @@ const env = config();
 const JWT_SECRET = env.JWT_SECRET || "default_secret";
 
 const groqApiUrl = "https://api.groq.com/openai/v1/chat/completions";
-const apiKey = "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"; // 替換為你的 Groq API 金鑰
+const apiKey = "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"; // 替換為你的 Groq API 金鑰
+
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
 
 // 啟用 CORS
 app.use(oakCors({ origin: "*" }));
@@ -110,6 +116,8 @@ router.post("/api/login", async (ctx) => {
         return;
       }
 
+      
+
       ctx.response.status = 200;
       ctx.response.body = { message: "登入成功！",token: JWT_SECRET }; // 明確定義返回的訊息
     } catch (error) {
@@ -146,65 +154,29 @@ app.use(async (ctx, next) => {
 
 // 聊天 API
 router.post("/api/chat", async (ctx) => {
-  try {
-    // 從請求中獲取使用者訊息
-    const { userMessage } = await ctx.request.body({ type: "json" }).value;
-    
-    // 從 state 中獲取 userId
-    const userId = ctx.state.userId;
+  const body = ctx.request.body();
+  if (body.type === "json") {
+    try {
+      const { question } = await body.value;
+      if (!question) {
+        ctx.response.status = 400;
+        ctx.response.body = { message: "請提供問題！" };
+        return;
+      }
 
-    // 如果沒有 userId，則回傳 401 狀態碼
-    if (!userId) {
-      ctx.response.status = 401;
-      ctx.response.body = { message: "未經授權" };
-      return;
-    }
-
-   
-
-    // 呼叫 Groq API，發送使用者訊息
-    const response = await fetch(groqApiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: userMessage }],
-      }),
-    });
-
-    // 檢查 Groq API 回應是否正常
-    if (response.ok) {
-      const data = await response.json();
-      const aiReply = data.choices[0].message.content;
-
-      // 儲存使用者訊息和 AI 回應到資料庫
-      await db.query(
-        "INSERT INTO chats (user_id, userMessage, aiReply) VALUES (?, ?, ?)",
-        [userId, userMessage, aiReply]
-      );
-
-      // 回傳 AI 回應給使用者
-      ctx.response.body = { reply: aiReply };
-    } else {
-      // 如果 Groq API 回應錯誤，回傳 500 錯誤
-      const errorData = await response.json();
+      // 呼叫 groqApi.js 的 askQuestion 函數
+      const answer = await askQuestion(question);
+      ctx.response.status = 200;
+      ctx.response.body = { answer };
+    } catch (error) {
+      console.error("AI 聊天失敗:", error);
       ctx.response.status = 500;
-      ctx.response.body = { message: "呼叫 Groq API 出錯", error: errorData };
+      ctx.response.body = { message: "AI 聊天失敗，請稍後再試！" };
     }
-  } catch (error) {
-    // 捕獲錯誤並回傳 500 錯誤
-    console.error("聊天請求錯誤:", error);
-    ctx.response.status = 500;
-    ctx.response.body = { message: "伺服器錯誤" };
+  } else {
+    ctx.response.status = 400;
+    ctx.response.body = { message: "請使用 JSON 格式傳送資料！" };
   }
-});
-
-// 忽略 favicon 請求
-router.get("/favicon.ico", (ctx) => {
-  ctx.response.status = 204;
 });
 
 const PORT = 8000;

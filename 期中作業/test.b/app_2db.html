@@ -343,44 +343,42 @@ document.getElementById("register-form").addEventListener("submit", async (event
   }
 });
 
-// 範例跳轉到聊天頁面函數
-document.getElementById("send-btn").onclick = async () => {
-  const input = document.getElementById("user-input");
-  const message = input.value.trim();
-  if (!message) return;
+// 跳轉到聊天頁面函數
+document.getElementById("send-btn").addEventListener("click", async () => {
+      const userInput = document.getElementById("user-input");
+      const message = userInput.value.trim();
+      if (message) {
+        displayMessage(message, "user");
+        userInput.value = "";
+        try {
+          const res = await fetch(`${domain}/api/chat`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ message }),
+          });
 
-
-  appendMessage(message, "user"); // 顯示使用者訊息
-  input.value = ""; // 清空輸入框
-
-  
-
-  try {
-    const res = await fetch(`${domain}/api/chat`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json"},
-      body: JSON.stringify({ message })
+          if (!res.ok) throw new Error("訊息發送失敗！");
+          
+          const responseData = await res.json();
+          displayMessage(responseData.reply, "ai");
+        } catch (err) {
+          displayMessage("對不起，發生錯誤。", "ai");
+        }
+      }
     });
 
-    const data = await res.json();
-
-    // 顯示 AI 回覆訊息
-    appendMessage(data.reply, "ai");
-  } catch (err) {
-    appendMessage("發送失敗，請稍後再試！", "ai");
-  }
-};
-
-// 添加訊息到聊天框的函數
-function appendMessage(text, sender) {
-  const chatBox = document.getElementById("chat-box");
-  const msg = document.createElement("div");
-  msg.className = `chat-message ${sender}`; // 設置訊息的樣式，區分使用者和 AI
-  msg.textContent = text;
-  chatBox.appendChild(msg);
-  chatBox.scrollTop = chatBox.scrollHeight; // 滾動到最新訊息
-}
+    // 顯示訊息
+    function displayMessage(message, sender) {
+      const chatBox = document.getElementById("chat-box");
+      const messageDiv = document.createElement("div");
+      messageDiv.classList.add("chat-message", sender);
+      messageDiv.textContent = message;
+      chatBox.appendChild(messageDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
   </script>
 </body>
 </html>
