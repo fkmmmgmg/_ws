@@ -149,7 +149,7 @@ router.post("/api/chat", async (ctx) => {
   }
 });
 
-const PORT = 8000;
+const PORT = 8001;
 console.log(`伺服器正在運行於 http://127.0.0.1:${PORT}`);
 app.use(router.routes());
 app.use(router.allowedMethods());

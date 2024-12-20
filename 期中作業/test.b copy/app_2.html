@@ -167,7 +167,7 @@
   </div>
 
   <script>
-    const domain = "http://localhost:8001";
+    const domain = "http://localhost:8000";
 
     // 初始頁面加載
     window.onload = () => {
@@ -209,16 +209,56 @@
           body: JSON.stringify({ username, password }),
         });
 
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.message || "登入失敗！帳號或密碼錯誤");
+        const data = await res.json();
+
+        if (res.ok) {
+          alert("登入成功！");
+          localStorage.setItem("userId", data.userId); // 儲存 userId
+          localStorage.setItem("username", data.username); // 儲存 username
+          showChatPage(); // 切換到聊天頁面
+          loadChatHistory(data.userId); // 加載歷史對話
+        } else {
+          throw new Error(data.message || "登入失敗！帳號或密碼錯誤");
         }
 
-        showChatPage();
       } catch (err) {
         alert(err.message || "登入失敗！");
       }
     });
+
+      // 加載歷史對話
+    async function loadChatHistory(userId) {
+      try {
+        if (!userId) {
+          console.warn("未提供 userId，跳過歷史對話加載。");
+          return; // 跳過執行
+        }
+
+        const res = await fetch(`${domain}/api/chat/history`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId }),
+        });
+
+        const data = await res.json();
+
+        const chatBox = document.getElementById("chat-box");
+        chatBox.innerHTML = ""; // 清空現有聊天框內容
+
+        if (res.ok && data.history && data.history.length > 0) {
+          data.history.forEach((chat) => {
+            displayMessage("user", chat.userMessage);
+            displayMessage("ai", chat.aiReply);
+          });
+        } else {
+          // 顯示後端回傳的提示訊息
+          displayMessage("system", data.message || "沒有歷史對話記錄");
+        }
+      } catch (err) {
+        console.error("載入歷史對話失敗:", err);
+        alert(err.message || "無法載入歷史對話");
+      }
+    }
 
     // 註冊處理
     document.getElementById("register-form").addEventListener("submit", async (event) => {
@@ -245,6 +285,7 @@
       }
     });
 
+
     // 送出聊天訊息
     document.getElementById("send-btn").addEventListener("click", async () => {
       const input = document.getElementById("user-input");
@@ -255,13 +296,22 @@
       input.value = "";
 
       try {
+        // 從 localStorage 獲取 userId
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+          throw new Error("用戶未登入或用戶 ID 缺失！");
+        }
+
         const res = await fetch(`${domain}/api/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: message }),
+          body: JSON.stringify({ userId, question: message }), // 傳送 userId 和訊息
         });
 
-        if (!res.ok) throw new Error("無法獲得回應，請稍後再試");
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || "無法獲得回應，請稍後再試");
+        }
 
         const data = await res.json();
         displayMessage("ai", data.answer);
@@ -269,7 +319,7 @@
         displayMessage("ai", "伺服器發生錯誤，請稍後再試");
         console.error(err);
       }
-    });
+});
 
     // 顯示訊息
     function displayMessage(sender, message) {
@@ -277,6 +327,7 @@
       const div = document.createElement("div");
       div.classList.add("chat-message", sender);
       div.textContent = message;
+      chatBox.appendChild(messageDiv);
       chatBox.appendChild(div);
       chatBox.scrollTop = chatBox.scrollHeight;
     }

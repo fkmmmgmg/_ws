@@ -1,24 +1,14 @@
 import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
-import { create, verify } from "https://deno.land/x/djwt/mod.ts";
 import { DB } from "https://deno.land/x/sqlite/mod.ts";
 import { config } from "https://deno.land/x/dotenv/mod.ts";
 import { oakCors } from "https://deno.land/x/cors/mod.ts";
 import { Application, Router, send } from "https://deno.land/x/oak@v10.0.0/mod.ts";
-
-import { askQuestion } from "./groqApi.js";
-
+import { askGroqAI } from "file:///D:/My/WebsiteDesign-2/_ws/期中作業/test.b/groqApi.js";
 
 // 初始化應用程式和環境變數
 const app = new Application();
 const router = new Router();
 const env = config();
-const JWT_SECRET = env.JWT_SECRET || "default_secret";
-
-const groqApiUrl = "https://api.groq.com/openai/v1/chat/completions";
-const apiKey = "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"; // 替換為你的 Groq API 金鑰
-
-const encoder = new TextEncoder();
-const decoder = new TextDecoder();
 
 // 啟用 CORS
 app.use(oakCors({ origin: "*" }));
@@ -53,7 +43,6 @@ db.query(`
   )
 `);
 
-
 // 註冊 API
 router.post("/api/register", async (ctx) => {
   const body = ctx.request.body();
@@ -73,6 +62,9 @@ router.post("/api/register", async (ctx) => {
       const hashedPassword = await bcrypt.hash(password);
       await db.query("INSERT INTO users (username, password) VALUES (?, ?)", [username, hashedPassword]);
 
+       // 取得新用戶的 ID
+       const newUser = await db.query("SELECT id FROM users WHERE username = ?", [username]);
+
       ctx.response.status = 201;
       ctx.response.body = { message: "註冊成功！" }; // 明確定義返回的訊息
     } catch (error) {
@@ -90,18 +82,18 @@ router.post("/api/register", async (ctx) => {
 router.post("/api/login", async (ctx) => {
   const body = ctx.request.body();
   const DB_ENUMS =  {
-      number: 0,
-      account: 1,
-      password: 2,
-      email: 3,
+    number: 0,
+    account: 1,
+    password: 2,
+    email: 3,
   };
-  if (body.type === 'json'){
-    try{
+  if (body.type === 'json') {
+    try {
       const post = await body.value;
       const { username, password } = post;
 
       const users = await db.query("SELECT * FROM users WHERE username = ?", [username]);
-      ctx.response.body = {message: users};
+      ctx.response.body = { message: users };
       if (users.length === 0) {
         ctx.response.status = 401;
         ctx.response.body = { message: "登入失敗，帳號或密碼錯誤" }; // 明確定義返回的訊息
@@ -116,40 +108,17 @@ router.post("/api/login", async (ctx) => {
         return;
       }
 
-      
-
       ctx.response.status = 200;
-      ctx.response.body = { message: "登入成功！",token: JWT_SECRET }; // 明確定義返回的訊息
+      ctx.response.body = { message: "登入成功！", userId: user[DB_ENUMS.number], username: user[DB_ENUMS.account] };
     } catch (error) {
       console.error("登入失敗:", error);
       ctx.response.status = 400;
-      ctx.response.body = { message: "登入失敗，請稍後再試！" }; // 明確定義返回的訊息
+      ctx.response.body = { message: "登入失敗，請稍後再試！" };
     }
   } else {
     ctx.response.status = 400;
-    ctx.response.body = { message: "請使用 JSON 格式傳送資料！" }; // 明確定義返回的訊息
+    ctx.response.body = { message: "請使用 JSON 格式傳送資料！" };
   }
-});
-
-
-// 驗證 JWT Token 中間件
-app.use(async (ctx, next) => {
-  const authorization = ctx.request.headers.get("Authorization");
-  if (authorization) {
-    const [scheme, token] = authorization.split(" ");
-    if (scheme === "Bearer" && token) {
-      try {
-        const payload = await verify(token, JWT_SECRET, "HS256");
-        ctx.state.userId = payload.userId; // 把 userId 放到 ctx.state 中，供後續路由使用
-      } catch (err) {
-        console.error("Token 驗證錯誤", err);
-        ctx.response.status = 401;
-        ctx.response.body = { message: "無效或過期的 Token" };
-        return;
-      }
-    }
-  }
-  await next(); // 繼續處理後續路由
 });
 
 // 聊天 API
@@ -165,7 +134,14 @@ router.post("/api/chat", async (ctx) => {
       }
 
       // 呼叫 groqApi.js 的 askQuestion 函數
-      const answer = await askQuestion(question);
+      const answer = await askGroqAI(question);
+
+      // 儲存對話到資料庫
+      await db.query(
+        `INSERT INTO chats (user_id, userMessage, aiReply) VALUES (?, ?, ?)`,
+        [userId, question, answer]
+      );
+
       ctx.response.status = 200;
       ctx.response.body = { answer };
     } catch (error) {
@@ -178,6 +154,41 @@ router.post("/api/chat", async (ctx) => {
     ctx.response.body = { message: "請使用 JSON 格式傳送資料！" };
   }
 });
+
+//加載聊天歷史
+router.post("/api/chat/history", async (ctx) => {
+  const { userId } = ctx.request.body; // 使用 body 來獲取 userId
+  
+  if (!userId) {
+    ctx.response.status = 400;
+    ctx.response.body = { message: "請提供 userId！" };
+    return;
+  }
+
+  try {
+    const history = await db.query(
+      `SELECT userMessage, aiReply, timestamp FROM chats WHERE user_id = ? ORDER BY timestamp ASC`,
+      [userId]
+    );
+
+    if (history.length === 0) {
+      ctx.response.status = 200;
+      ctx.response.body = {
+        message: "目前無任何聊天歷史，歡迎開始與 AI 聊天！",
+        history: [],
+      };
+      return;
+    }
+
+    ctx.response.status = 200;
+    ctx.response.body = { history };
+  } catch (error) {
+    console.error("取得對話歷史失敗:", error);
+    ctx.response.status = 500;
+    ctx.response.body = { message: "無法取得對話歷史，請稍後再試！" };
+  }
+});
+
 
 const PORT = 8000;
 console.log(`伺服器正在運行於 http://127.0.0.1:${PORT}`);
