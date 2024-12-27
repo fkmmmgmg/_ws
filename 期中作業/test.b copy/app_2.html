@@ -237,7 +237,7 @@
         const res = await fetch(`${domain}/api/chat/history`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId }),
+          body: JSON.stringify({ userId, question: message }),
         });
 
         const data = await res.json();
@@ -305,7 +305,7 @@
         const res = await fetch(`${domain}/api/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, question: message }), // 傳送 userId 和訊息
+          body: JSON.stringify({ question: message }), // 傳送 userId 和訊息
         });
 
         if (!res.ok) {
