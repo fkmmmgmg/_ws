@@ -126,7 +126,12 @@ router.post("/api/chat", async (ctx) => {
   const body = ctx.request.body();
   if (body.type === "json") {
     try {
-      const { question } = await body.value;
+      const { userId, question } = await body.value;
+      if (!userId) {
+        ctx.response.status = 400;
+        ctx.response.body = { message: "請提供 userId！" };
+        return;
+      }
       if (!question) {
         ctx.response.status = 400;
         ctx.response.body = { message: "請提供問題！" };
@@ -135,6 +140,7 @@ router.post("/api/chat", async (ctx) => {
 
       // 呼叫 groqApi.js 的 askQuestion 函數
       const answer = await askGroqAI(question);
+      
 
       // 儲存對話到資料庫
       await db.query(
@@ -157,7 +163,11 @@ router.post("/api/chat", async (ctx) => {
 
 //加載聊天歷史
 router.post("/api/chat/history", async (ctx) => {
-  const { userId } = ctx.request.body; // 使用 body 來獲取 userId
+
+  const body = ctx.request.body();
+if (body.type === "json") {
+  const { userId } = await body.value;
+}
   
   if (!userId) {
     ctx.response.status = 400;
@@ -193,5 +203,9 @@ router.post("/api/chat/history", async (ctx) => {
 const PORT = 8000;
 console.log(`伺服器正在運行於 http://127.0.0.1:${PORT}`);
 app.use(router.routes());
+app.use(oakCors({ 
+  origin: "*", 
+  allowedHeaders: ["Content-Type", "Authorization"] 
+}));
 app.use(router.allowedMethods());
 await app.listen({ port: PORT });
